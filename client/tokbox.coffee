@@ -4,11 +4,11 @@ class @Tokbox
     p "in constructor this", @
     @initialize(@mode)
     @TB = TB
-
+    
   initSession: ->
     @streams = []
     @streamIds = []
-    # TB.setLogLevel TB.DEBUG
+    # @TB.setLogLevel TB.DEBUG
     @TB.addEventListener 'exception', @exception
     @session = @TB.initSession @sessionId
     @session.addEventListener x, @[x] for x in ['sessionConnected', 'connectionCreated', 
@@ -16,14 +16,11 @@ class @Tokbox
     @session
   
   connect: ->
-    p "before"
-    p "apikey", @apiKey
     @session.connect @apiKey, @token
-    p "after"
     
   publish: =>
     if @publisherCount() < 1 #only allow one publisher
-      @publisher = @TB.initPublisher @apiKey, "myPublisherDiv"
+      @publisher = @TB.initPublisher @apiKey, "#{@mode}Publisher"
       @session.publish @publisher
     else
       p "Can only publish one stream at a time"
@@ -43,19 +40,20 @@ class @Tokbox
   exception: (event) =>
     p "EXCEPTION!!"
     p "exception", event
+  sessionConnected: (event) =>
+    p "sessionConnected", event
+    @subscribeToStreams event.streams
+    delete TB
+    
+  sessionDisconnected: (event) =>
+    p "sessionDisconnected", event
+
   connectionCreated: (event) =>
     p "connectionCreated", event
     
   connectionDestroyed: (event) =>
     p "connectionDestroyed", event
     
-  sessionConnected: (event) =>
-    p "sessionConnected", event
-    @subscribeToStreams event.streams
-    
-  sessionDisconnected: (event) =>
-    p "sessionDisconnected", event
-
   streamCreated: (event) =>
     p "streamCreated", event
     @subscribeToStreams event.streams
@@ -86,10 +84,8 @@ class @Tokbox
     @session.subscribe stream, div.id
     
     
-
   initialize: (mode) ->
-    p "in initialize this", @
-    @reset()
+    delete TB if TB?
     @apiKey = "1127"
     if mode is 'flash' 
       TBFlash()
@@ -102,10 +98,6 @@ class @Tokbox
     else
       alert 'You need to specify either webrtc or flash as mode in runVideo'
     
-    
-  reset: ->
-    # @resetHtml()
-    delete TB
     
 # Meteor.startup ->
   # mode = if $.browser.chrome then 'webrtc' else 'flash'
