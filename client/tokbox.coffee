@@ -7,12 +7,30 @@ class @Tokbox
     # TB.setLogLevel TB.DEBUG
     TB.addEventListener 'exception', @handlers.exception
     @session = TB.initSession @sessionId
-    handlerFunctions = ['sessionConnected', 'sessionDisconnected', 'streamCreated', 'streamDestroyed', 'connectionCreated', 'connectionDestroyed']
-    @session.addEventListener x, @handlers[x] for x in handlerFunctions
+    @session.addEventListener x, @handlers[x] for x in ['sessionConnected', 'connectionCreated', 
+    'streamCreated', 'sessionDisconnected', 'connectionDestroyed', 'streamDestroyed']
+    @session
+  
+  @connect = ->
     @session.connect @apiKey, @token
     
+  @publish = ->
+    if @publisherCount() < 1 #only allow one publisher
+      @publisher = TB.initPublisher @apiKey, "myPublisherDiv"
+      @session.publish @publisher
+    else
+      p "Can only publish one stream at a time"
+    
+    
   @resetHtml = =>
-    $('div#streams').html '<div id="myPublisherDiv"></div>'
+    $('div#video').html '''
+    <div id="myPublisherDiv"></div>
+  	<div id="streams"></div>
+    '''
+    
+  @publisherCount = =>
+    return 0 unless @session?.publishers
+    (k for k of @session.publishers).length
 
   @handlers =
     exception: (event) =>
@@ -26,8 +44,6 @@ class @Tokbox
       
     sessionConnected: (event) =>
       p "sessionConnected", event
-      @publisher = TB.initPublisher @apiKey, "myPublisherDiv"
-      @session.publish @publisher
       @handlers.subscribeToStreams event.streams
       
     sessionDisconnected: (event) =>
@@ -70,12 +86,10 @@ class @Tokbox
       @apiKey = "1127"
       if mode is 'flash' 
         TBFlash()
-        @sessionId = "1_MX4xMTI3fn5XZWQgSnVuIDI2IDAwOjEzOjE3IFBEVCAyMDEzfjAuNzE2MzQ4MDV-"
-        @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz00ZDg1MjY1YzBiNTdkMzM0MzQ1MGNiODBhN2U0OTJhOTdhZGM4ODgzOnNlc3Npb25faWQ9MV9NWDR4TVRJM2ZuNVhaV1FnU25WdUlESTJJREF3T2pFek9qRTNJRkJFVkNBeU1ERXpmakF1TnpFMk16UTRNRFYtJmNyZWF0ZV90aW1lPTEzNzIyMzA3OTcmbm9uY2U9MTAwMzkwJnJvbGU9cHVibGlzaGVy"
+        @sessionId = "1_MX4xMTI3fn5Nb24gSnVuIDE3IDE0OjI3OjA5IFBEVCAyMDEzfjAuNDkzNzk5MDN-"
+        @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz0wYzc3Mzc5MWEzNDA5MzdmZTZlZjVkZDMxNWU1NTcyN2VkYjJlOWU0OnNlc3Npb25faWQ9MV9NWDR4TVRJM2ZuNU5iMjRnU25WdUlERTNJREUwT2pJM09qQTVJRkJFVkNBeU1ERXpmakF1TkRrek56azVNRE4tJmNyZWF0ZV90aW1lPTEzNzIzMzEwMTcmbm9uY2U9MjcxMDYzJnJvbGU9cHVibGlzaGVy"
       else if mode is 'webrtc'
         TBWebrtc()
-        @sessionId = "1_MX4xMTI3fn5XZWQgSnVuIDI2IDAwOjI2OjI4IFBEVCAyMDEzfjAuOTMwNDE1OX4"
-        @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz1lODg1YmI3YzVmNmU1N2QzMjNmYWM4ZmZkNjJmZjQ4NGY3OWJjYzFjOnNlc3Npb25faWQ9MV9NWDR4TVRJM2ZuNVhaV1FnU25WdUlESTJJREF3T2pJMk9qSTRJRkJFVkNBeU1ERXpmakF1T1RNd05ERTFPWDQmY3JlYXRlX3RpbWU9MTM3MjIzMTU4OCZub25jZT04Njc2MDgmcm9sZT1wdWJsaXNoZXI="
         @sessionId = "1_MX4xMTI3fn5XZWQgSnVuIDI2IDE5OjUyOjI3IFBEVCAyMDEzfjAuOTM3Njk1N34"
         @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz1lNmJjYTY5NWMxMzk1OTZlODgwMzBjZjZhMzBkMWY0NDA3MzVhZGRkOnNlc3Npb25faWQ9MV9NWDR4TVRJM2ZuNVhaV1FnU25WdUlESTJJREU1T2pVeU9qSTNJRkJFVkNBeU1ERXpmakF1T1RNM05qazFOMzQmY3JlYXRlX3RpbWU9MTM3MjMwMTU0NyZub25jZT0zMjQzODgmcm9sZT1wdWJsaXNoZXI="
       else
@@ -83,7 +97,7 @@ class @Tokbox
       
       
     reset: =>
-      @resetHtml()
+      # @resetHtml()
       delete TB
     
 # Meteor.startup ->
