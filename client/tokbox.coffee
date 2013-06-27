@@ -1,6 +1,7 @@
 
 class @Tokbox
-  constructor: (@mode) ->
+  constructor: (@mode, @canPublish, @fun) ->
+    @funFirstTime = true
     
   go: ->
     @initSession()
@@ -22,11 +23,11 @@ class @Tokbox
     @session.connect @apiKey, @token
     
   publish: ->
-    if @publisherCount() < 1 #only allow one publisher
+    if @publisherCount() < 1 and @canPublish #only allow one publisher
       @publisher = @TB.initPublisher @apiKey, "#{@mode}Publisher"
       @session.publish @publisher
     else
-      p "Can only publish one stream at a time"
+      p "Can only publish one stream at a time (#{@mode})"
     
     
   resetHtml: ->
@@ -40,7 +41,7 @@ class @Tokbox
     (k for k of @session.publishers).length
 
   subscribeToStreams: (streams) ->
-    p "subscribeToStreams", streams
+    p "subscribeToStreams (#{@mode})", streams
     p "streams connection ids", (s.connection.connectionId for s in streams)
     p "streams ids", (s.streamId for s in streams)
     p "my streams", @streams
@@ -52,7 +53,7 @@ class @Tokbox
       @subscribeToStream s
       
   subscribeToStream: (stream) -> 
-    p "subscribeToStream", stream  
+    p "subscribeToStream (#{@mode})", stream  
     p "subscribe to stream #{stream.streamId}, #{stream.connection.connectionId}"
     @streams.push stream.connection.connectionId
     @streamIds.push stream.streamId
@@ -64,27 +65,32 @@ class @Tokbox
   #handlers
   exceptionHandler: (event) =>
     p "EXCEPTION!!"
-    p "exception", event
+    p "exception (#{@mode})", event
   sessionConnectedHandler: (event) =>
-    p "sessionConnected", event
+    p "sessionConnected (#{@mode})", event
     @subscribeToStreams event.streams
-    # delete TB
+    @publish()
     
   connectionCreatedHandler: (event) =>
-    p "connectionCreated", event
+    p "connectionCreated (#{@mode})", event
+    @subscribeToStreams event.streams if event.streams
     
   streamCreatedHandler: (event) =>
-    p "streamCreated", event
+    p "streamCreated (#{@mode})", event
     @subscribeToStreams event.streams
+    if @fun? and @funFirstTime
+      @fun() 
+      @funFirstTime = false
+    
     
   streamDestroyedHandler: (event) =>
-    p "streamDestroyed", event
+    p "streamDestroyed (#{@mode})", event
     
   connectionDestroyedHandler: (event) =>
-    p "connectionDestroyed", event
+    p "connectionDestroyed (#{@mode})", event
     
   sessionDisconnectedHandler: (event) =>
-    p "sessionDisconnected", event
+    p "sessionDisconnected (#{@mode})", event
 
     
   _initialize: (mode) -> #don't call this by itself, it will kill TB before it's ready for other technology
@@ -102,7 +108,11 @@ class @Tokbox
       alert 'You need to specify either webrtc or flash as mode in runVideo'
     @TB = TB
     
-    
-# Meteor.startup ->
+
+Meteor.startup ->
+  canPublish = if $.browser.chrome then true else false
+  @f = new Tokbox 'flash', canPublish
+  @w = new Tokbox 'webrtc', canPublish, (-> f.go())
+  w.go()
   # mode = if $.browser.chrome then 'webrtc' else 'flash'
   # Tokbox.initSession mode
