@@ -48,7 +48,7 @@ class @Tokbox
     p "my stream ids", @streamIds
     for s in streams
       return if s.connection.connectionId is @session.connection.connectionId
-      return if !!~@streams.indexOf s.connection.connectionId
+      # return if !!~@streams.indexOf s.connection.connectionId
       p "did not return for stream id #{s.streamId}, conn id #{s.connection.connectionId}"
       @subscribeToStream s
       
@@ -96,23 +96,16 @@ class @Tokbox
   _initialize: (mode) -> #don't call this by itself, it will kill TB before it's ready for other technology
     delete TB if TB?
     @apiKey = "1127"
-    if mode is 'flash' 
-      TBFlash()
-      @sessionId = "1_MX4xMTI3fn5Nb24gSnVuIDE3IDE0OjI3OjA5IFBEVCAyMDEzfjAuNDkzNzk5MDN-"
-      @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz0wYzc3Mzc5MWEzNDA5MzdmZTZlZjVkZDMxNWU1NTcyN2VkYjJlOWU0OnNlc3Npb25faWQ9MV9NWDR4TVRJM2ZuNU5iMjRnU25WdUlERTNJREUwT2pJM09qQTVJRkJFVkNBeU1ERXpmakF1TkRrek56azVNRE4tJmNyZWF0ZV90aW1lPTEzNzIzMzEwMTcmbm9uY2U9MjcxMDYzJnJvbGU9cHVibGlzaGVy"
-    else if mode is 'webrtc'
-      TBWebrtc()
-      @sessionId = "1_MX4xMTI3fn5XZWQgSnVuIDI2IDE5OjUyOjI3IFBEVCAyMDEzfjAuOTM3Njk1N34"
-      @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz1lNmJjYTY5NWMxMzk1OTZlODgwMzBjZjZhMzBkMWY0NDA3MzVhZGRkOnNlc3Npb25faWQ9MV9NWDR4TVRJM2ZuNVhaV1FnU25WdUlESTJJREU1T2pVeU9qSTNJRkJFVkNBeU1ERXpmakF1T1RNM05qazFOMzQmY3JlYXRlX3RpbWU9MTM3MjMwMTU0NyZub25jZT0zMjQzODgmcm9sZT1wdWJsaXNoZXI="
-    else
-      alert 'You need to specify either webrtc or flash as mode in runVideo'
+    TBWebrtc()
+    @sessionId = "2_MX4xMTI3fn5Nb24gSnVsIDIyIDIxOjIzOjI1IFBEVCAyMDEzfjAuMDAzMTg4NDkwOX4"
+    @token = "T1==cGFydG5lcl9pZD0xMTI3JnNpZz00YTRjMzZhNDY1Njc3MGM0MjI5NTY2ODZiOTRhMDkyOWUxMTVhZGEwOnNlc3Npb25faWQ9Ml9NWDR4TVRJM2ZuNU5iMjRnU25Wc0lESXlJREl4T2pJek9qSTFJRkJFVkNBeU1ERXpmakF1TURBek1UZzRORGt3T1g0JmNyZWF0ZV90aW1lPTEzNzQ1NTM0MDYmbm9uY2U9ODA5MTU5JnJvbGU9cHVibGlzaGVy"
     @TB = TB
     
 
 Meteor.startup ->
-  canPublish = if $.browser.chrome then true else false
-  @f = new Tokbox 'flash', canPublish
-  @w = new Tokbox 'webrtc', canPublish, (-> f.go())
+  canPublish = true # if $.browser.chrome then true else false
+  # @f = new Tokbox 'flash', canPublish
+  @w = new Tokbox 'webrtc', canPublish#, (-> w.go())
   w.go()
   # mode = if $.browser.chrome then 'webrtc' else 'flash'
   # Tokbox.initSession mode
